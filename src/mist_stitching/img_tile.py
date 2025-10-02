@@ -1,6 +1,6 @@
 import os
 import numpy as np
-import skimage.io
+
 from dataclasses import dataclass
 import typing
 
@@ -29,25 +29,57 @@ class Tile():
         self.abs_x = 0
         self.abs_y = 0
 
+    @classmethod
+    def from_data(cls, r, c, data: np.ndarray, name: str = None):
+        """
+        Create a Tile instance with image data directly provided.
+        
+        Args:
+            r: Row position
+            c: Column position  
+            data: Image data as numpy array
+            name: Optional name for the tile (defaults to f"tile_{r}_{c}")
+        """
+        # Create instance with dummy filepath
+        tile = cls(r, c, filepath="", disable_cache=False)
+        
+        # Process data (convert to grayscale if needed)
+        if len(data.shape) == 3:
+            tile.data = np.mean(data, axis=2).astype(np.uint8)
+        else:
+            tile.data = data.astype(np.uint8) if data.dtype != np.uint8 else data
+            
+        # Set name
+        tile.name = name if name is not None else f"tile_{r}_{c}"
+        
+        return tile
+
     def get_image(self) -> np.ndarray:
         if not self.disable_cache:
             if self.data is not None:
                 return self.data
             else:
                 if self.exists():
+                    try:
+                        import skimage.io
+                    except ImportError as exc:
+                        raise ImportError("scikit-image is required for file loading. Install with: pip install scikit-image") from exc
                     self.data = skimage.io.imread(self.filepath)
                     if len(self.data.shape) == 3:
-
                         self.data = np.mean(self.data, axis=2).astype(np.uint8)
                 return self.data
         if self.exists():
+            try:
+                import skimage.io
+            except ImportError as exc:
+                raise ImportError("scikit-image is required for file loading. Install with: pip install scikit-image") from exc
             img = skimage.io.imread(self.filepath)
             if len(img.shape) == 3:
                 img = np.mean(img, axis=2).astype(np.uint8)
             return img
 
     def exists(self):
-        return os.path.exists(self.filepath)
+        return os.path.exists(self.filepath) if self.filepath else True
 
     def get_translation(self, direction: str) -> Peak:
         assert direction in ['HORIZONTAL', 'VERTICAL']

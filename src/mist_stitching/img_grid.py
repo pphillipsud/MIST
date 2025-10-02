@@ -2,9 +2,14 @@ import argparse
 import os
 import re
 import numpy as np
-import skimage.io
 import logging
+from typing import List
 
+# Add the directory of this file to sys.path
+import sys
+current_dir = os.path.dirname(os.path.abspath(__file__))
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
 # local imports
 import img_tile
 
@@ -142,6 +147,17 @@ class TileGrid():
 
                     f.write("file: {}; corr: {:0.10f}; position: ({:d}, {:d}); grid: ({:d}, {:d});\n".format(tile.name, ncc, tile.abs_x, tile.abs_y, c, r))
 
+class TileGirdFrames(TileGrid):
+    def __init__(self, frames: List[np.ndarray], args: argparse.Namespace):
+        super().__init__(args)
+
+        # Initialize the tiles
+        for r in range(self.args.grid_height):
+            for c in range(self.args.grid_width):
+                if r < len(frames) and c < len(frames[r]) and isinstance(frames[r][c], np.ndarray):
+                    t = img_tile.Tile.from_data(r, c, frames[r][c])
+                    self.tiles[r][c] = t
+        
 
 class TileGridRowCol(TileGrid):
     colPattern = "(.*)(\\{[c]+\\})(.*)"
@@ -203,7 +219,6 @@ class TileGridRowCol(TileGrid):
                     self.tiles[grid_row][grid_col] = t
                 grid_col += col_incrementer
             grid_row += row_incrementer
-
 
 class TileGridSequential(TileGrid):
 
@@ -342,8 +357,6 @@ class TileGridSequential(TileGrid):
                     self.tiles[r][c] = other
                     other.r = r
                     self.tiles[row_offset][c] = None
-
-
 
 class TileGridFromCsv(TileGrid):
 

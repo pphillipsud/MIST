@@ -1,6 +1,10 @@
 import os
 import numpy as np
-import skimage.io
+try:
+    import skimage.io
+except ImportError:
+    pass
+    #raise ImportError("scikit-image is required for image assembly. Install with: pip install scikit-image")
 
 
 def assemble_image(global_positions_filepath, images_dirpath, output_filepath):
