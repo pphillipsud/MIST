@@ -1,6 +1,6 @@
 import os
 import numpy as np
-
+import skimage.io
 from dataclasses import dataclass
 import typing
 
@@ -60,19 +60,11 @@ class Tile():
                 return self.data
             else:
                 if self.exists():
-                    try:
-                        import skimage.io
-                    except ImportError as exc:
-                        raise ImportError("scikit-image is required for file loading. Install with: pip install scikit-image") from exc
                     self.data = skimage.io.imread(self.filepath)
                     if len(self.data.shape) == 3:
                         self.data = np.mean(self.data, axis=2).astype(np.uint8)
                 return self.data
         if self.exists():
-            try:
-                import skimage.io
-            except ImportError as exc:
-                raise ImportError("scikit-image is required for file loading. Install with: pip install scikit-image") from exc
             img = skimage.io.imread(self.filepath)
             if len(img.shape) == 3:
                 img = np.mean(img, axis=2).astype(np.uint8)

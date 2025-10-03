@@ -162,6 +162,8 @@ class PCIAM(ABC):
 
     @staticmethod
     def compute_pciam(t1: img_tile.Tile, t2: img_tile.Tile, n_peaks: int) -> img_tile.Peak:
+        check_for_trivial = True
+
         t1_img = t1.get_image()
         t2_img = t2.get_image()
 
@@ -184,9 +186,13 @@ class PCIAM(ABC):
             y, x = np.unravel_index(ind, pcm.shape)
             if t1.r == t2.r:
                 # same row, so compute NCC along Left-Right
+                if check_for_trivial and x < 1:
+                    continue  # skip this peak since it implies full overlap
                 peak = PCIAM.peak_cross_correlation_lr(t1_img, t2_img, x, y)
             else:
                 # different row, so compute NCC along Up-Down
+                if check_for_trivial and y < 1:
+                    continue  # skip this peak since it implies full overlap
                 peak = PCIAM.peak_cross_correlation_ud(t1_img, t2_img, x, y)
             peak_list.append(peak)
 
